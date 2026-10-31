@@ -24,20 +24,23 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Setup Android Environment
-        run: |
-          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-          yes | sdkmanager --licenses || true
-
-      - name: Create Web Folder
+      - name: Prepare Assets Directory
         run: |
           mkdir -p www
-          cp -r index.html www/ || true
-          cp -r style.css www/ 2>/dev/null || true
-          cp -r script.js www/ 2>/dev/null || true
-          cp -r * www/ 2>/dev/null || true
+          # Agar index.html kisi bhi naam ya subfolder me ho, use www/ me copy karein
+          find . -maxdepth 2 -iname "index.html" -exec cp {} www/index.html \;
+          find . -maxdepth 2 -iname "index.htm" -exec cp {} www/index.html \;
+          
+          # Agar style ya js files hain unhe bhi copy karein
+          cp -v *.css www/ 2>/dev/null || true
+          cp -v *.js www/ 2>/dev/null || true
+          cp -v -r assets www/ 2>/dev/null || true
+          cp -v -r images www/ 2>/dev/null || true
 
-      - name: Install NPM Tools
+          # Check karein ki www me index.html bani ya nahi
+          ls -la www/
+
+      - name: Install Dependencies
         run: npm install
 
       - name: Initialize Android
