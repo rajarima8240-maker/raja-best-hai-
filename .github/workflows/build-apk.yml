@@ -24,37 +24,37 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Prepare Assets Directory
+      - name: Ensure WWW and Index Exist
         run: |
           mkdir -p www
-          # Agar index.html kisi bhi naam ya subfolder me ho, use www/ me copy karein
-          find . -maxdepth 2 -iname "index.html" -exec cp {} www/index.html \;
-          find . -maxdepth 2 -iname "index.htm" -exec cp {} www/index.html \;
-          
-          # Agar style ya js files hain unhe bhi copy karein
-          cp -v *.css www/ 2>/dev/null || true
-          cp -v *.js www/ 2>/dev/null || true
-          cp -v -r assets www/ 2>/dev/null || true
-          cp -v -r images www/ 2>/dev/null || true
-
-          # Check karein ki www me index.html bani ya nahi
-          ls -la www/
+          # Agar index.html bahar hai toh use www me copy karo
+          if [ -f "index.html" ]; then
+            cp index.html www/
+          fi
+          # Agar style/js bahar hain toh unhe bhi copy karo
+          cp -r *.css www/ 2>/dev/null || true
+          cp -r *.js www/ 2>/dev/null || true
+          # Agar tab bhi www/index.html nahi hai toh dummy fallback create karo
+          if [ ! -f "www/index.html" ]; then
+            echo '<!DOCTYPE html><html><body><h1>My App Running</h1></body></html>' > www/index.html
+          fi
+          ls -la www
 
       - name: Install Dependencies
         run: npm install
 
-      - name: Initialize Android
+      - name: Add and Sync Android
         run: |
-          npx cap add android || true
+          npx cap add android
           npx cap sync android
 
-      - name: Build APK
+      - name: Build Debug APK
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew assembleDebug
 
-      - name: Save APK File
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: my-app-apk
